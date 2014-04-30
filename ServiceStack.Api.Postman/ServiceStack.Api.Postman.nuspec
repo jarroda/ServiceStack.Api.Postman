@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+		<summary>$description$</summary>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://github.com/jarroda/ServiceStack.Api.Postman/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/jarroda/ServiceStack.Api.Postman</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Provides a service that generates the Postman collection import JSON necessary to generate requests to all routes defined in the ServiceStack service.</description>
+    <copyright>Copyright 2014</copyright>
+    <tags>ServiceStack Postman API REST</tags>
+		<dependencies>
+			<dependency id="ServiceStack" version="[3,4)" />
+		</dependencies>
+  </metadata>
+</package>
