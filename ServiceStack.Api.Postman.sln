@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio Express 2013 for Web
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceStack.Api.Postman", "ServiceStack.Api.Postman\ServiceStack.Api.Postman.csproj", "{53F43B7F-CAC9-43CD-A9D9-3A244439A46B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{CDBA72F5-E0A5-42F0-8029-DD8D2B18FCAF}"
@@ -9,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{CDBA72
 		.nuget\NuGet.exe = .nuget\NuGet.exe
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestServiceV3", "TestServiceV3\TestServiceV3.csproj", "{475EFCAD-A678-4B09-A4FF-00E439A0D6CB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,6 +24,10 @@ Global
 		{53F43B7F-CAC9-43CD-A9D9-3A244439A46B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53F43B7F-CAC9-43CD-A9D9-3A244439A46B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53F43B7F-CAC9-43CD-A9D9-3A244439A46B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{475EFCAD-A678-4B09-A4FF-00E439A0D6CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{475EFCAD-A678-4B09-A4FF-00E439A0D6CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{475EFCAD-A678-4B09-A4FF-00E439A0D6CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{475EFCAD-A678-4B09-A4FF-00E439A0D6CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
