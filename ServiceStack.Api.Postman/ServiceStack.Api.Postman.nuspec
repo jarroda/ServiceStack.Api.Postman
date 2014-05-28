@@ -15,5 +15,8 @@
 		<dependencies>
 			<dependency id="ServiceStack" version="[3,4)" />
 		</dependencies>
+    <releaseNotes>
+      This release adds support for custom label templates and custom headers for Postman requests.
+    </releaseNotes>
   </metadata>
 </package>
