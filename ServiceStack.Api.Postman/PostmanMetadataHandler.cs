@@ -69,7 +69,6 @@ namespace ServiceStack.Api.Postman
             
             using (var scope = JsConfig.BeginScope())
             {
-
                 scope.EmitCamelCaseNames = true;
                 JsonSerializer.SerializeToStream(collection, responseStream);
             }
