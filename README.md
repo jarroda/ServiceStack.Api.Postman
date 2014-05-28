@@ -38,3 +38,31 @@ By default, the postman service is only available when running locally.  To enab
         ...
     }
 ```
+#### Custom Labels
+The generated label for the postman request can be customized using a format string with {type} and {route} placeholders.  These placeholders will be replaced with the request type and route and all other characters willl be left as-is.  The label format can be set either on the postman endpoint: `/postman?label={type}+{route}` or the `PostmanFeature`:
+
+```csharp
+    public override void Configure(Container container)
+    {
+        ...
+        Plugins.Add(new PostmanFeature { DefaultLabel = "{type} {route}" });
+        ...
+    }
+```
+#### Custom Headers
+Like custom labels, custom headers can be supplied for all postman requests.  By default, `Accept: text/json` is set on all requests, but this can be overridden on the postman endpoint or the `PostmanFeature`:
+
+```csharp
+    public override void Configure(Container container)
+    {
+        ...
+        Plugins.Add(new PostmanFeature
+        {
+    	    DefaultHeaders = new[] { "Accept: text/json", "Authorization: Basic eDpwYXNzd29yZA==" },
+        });
+        ...
+    }
+```
+or
+
+    /postman?headers=Accept:+text/json,Authorization:+Basic+eDpwYXNzd29yZA==
