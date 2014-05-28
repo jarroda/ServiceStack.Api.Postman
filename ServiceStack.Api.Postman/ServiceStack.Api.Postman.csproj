@@ -61,6 +61,7 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PostmanExtensions.cs" />
     <Compile Include="Types\PostmanCollection.cs" />
     <Compile Include="PostmanFeature.cs" />
     <Compile Include="PostmanMetadataHandler.cs" />

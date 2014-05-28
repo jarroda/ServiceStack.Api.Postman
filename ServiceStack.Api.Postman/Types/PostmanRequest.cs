@@ -31,6 +31,8 @@ namespace ServiceStack.Api.Postman.Types
 
         public PostmanData[] Data { get; set; }
 
+        public Dictionary<string, string> PathVariables { get; set; }
+
         public string[] Responses { get; set; }
     }
 }

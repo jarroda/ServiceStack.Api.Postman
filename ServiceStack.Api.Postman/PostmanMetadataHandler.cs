@@ -12,6 +12,8 @@ using ServiceStack.Text;
 using ServiceStack.WebHost.Endpoints.Extensions;
 using ServiceStack.Common.Utils;
 using System.Net;
+using ServiceStack.Common.Web;
+using ServiceStack.ServiceClient.Web;
 
 namespace ServiceStack.Api.Postman
 {
@@ -51,87 +53,73 @@ namespace ServiceStack.Api.Postman
         protected virtual void ProcessOperations(Stream responseStream, IHttpRequest httpReq)
         {
             var metadata = EndpointHost.Metadata;
+            var feature = EndpointHost.GetPlugin<PostmanFeature>();
 
             var collectionId = Guid.NewGuid().ToString();
+
+            var req = GetRequests(httpReq, metadata, collectionId, metadata.Operations);
 
             var collection = new PostmanCollection
             {
                 Id = collectionId,
                 Name = EndpointHost.Config.ServiceName,
                 Timestamp = DateTime.UtcNow.ToUnixTimeMs(),
-                Requests = metadata.Operations.SelectMany(op =>
-                {
-                    op.ToString();
-
-                    return op.Routes.Where(r => !r.AllowsAllVerbs).SelectMany(route => route.AllowedVerbs.Split(',').Select(verb =>
-                    {
-                        string name; 
-
-                        switch(verb)
-                        {
-                            case "GET":
-                                if(route.Path.Contains("{Id}"))
-                                {
-                                    name = "Get " + op.RequestType.Name + " by ID";
-                                }
-                                else
-                                {
-                                    name = "Get all " + op.RequestType.Name;
-                                }
-                                break;
-                            case "DELETE":
-                                if(route.Path.Contains("{Id}"))
-                                {
-                                    name = "Delete " + op.RequestType.Name + " by ID";
-                                }
-                                else
-                                {
-                                    name = "Delete all " + op.RequestType.Name;
-                                }
-                                break;
-                            case "POST":
-                                if(route.Path.Contains("{Id}"))
-                                {
-                                    name = "Update " + op.RequestType.Name + " by ID";
-                                }
-                                else
-                                {
-                                    name = "Create " + op.RequestType.Name;
-                                }
-                                break;
-                            default:
-                                name = verb.ToTitleCase() + " " + op.RequestType.Name;
-                                break;
-                        }
-
-                        return new PostmanRequest
-                        {
-                            Id = Guid.NewGuid().ToString(),
-                            CollectionId = collectionId,
-                            Method = verb,
-                            Name = name,
-                            Url = httpReq.GetApplicationUrl() + route.Path,
-                            Description = op.RequestType.GetDescription(),
-                            Headers = "Accept: application/json",
-                            Version = 2, // Magic number
-                            DataMode = "params",
-                            Time = DateTime.UtcNow.ToUnixTimeMs(),
-                            Data = verb != "POST" ? null : ReflectionUtils.PopulateObject(op.RequestType.CreateInstance()).ToStringDictionary().Select(a => new PostmanData
-                            {
-                                Key = a.Key,
-                                Value = a.Value,
-                                Type = "text",
-                            }).ToArray(),
-                        };
-                    }));                    
-                }).ToArray(),
+                Requests = req.ToArray(),
             };
-
+            
             using (var scope = JsConfig.BeginScope())
             {
-                
+
                 scope.EmitCamelCaseNames = true;
                 JsonSerializer.SerializeToStream(collection, responseStream);
+            }
+        }
+
+        private IEnumerable<PostmanRequest> GetRequests(IHttpRequest request, ServiceMetadata metadata, string parentId, IEnumerable<Operation> operations)
+        {
+            var ret = new List<PostmanRequest>();
+            // TODO: Support additional/custom headers
+            var headers = "Accept: " + MimeTypes.Json;
+
+            foreach (var op in metadata.OperationsMap.Values.Where(o => metadata.IsVisible(request, o)))
+            {
+                var exampleObject = ReflectionUtils.PopulateObject(op.RequestType.CreateInstance()).ToStringDictionary();
+                
+                var data = op.RequestType.GetSerializableFields().Select(f => f.Name)
+                    .Concat(op.RequestType.GetSerializableProperties().Select(p => p.Name))
+                    .ToDictionary(f => f, f => exampleObject[f]);
+
+                foreach (var route in op.Routes)
+                {
+                    var routeVerbs = route.AllowsAllVerbs ? new[] { "POST" } :route.AllowedVerbs.Split(new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    var restRoute = new RestRoute(route.RequestType, route.Path, route.AllowedVerbs);
+
+                    foreach (var verb in routeVerbs)
+                    {
+                        yield return new PostmanRequest
+                        {
+                            CollectionId = parentId,
+                            Id = Guid.NewGuid().ToString(),
+                            Method = verb,
+                            Url = request.GetApplicationUrl() + restRoute.Path.ReplaceVariables(),
+                            // TODO: Support custom labels
+                            Name = verb + " " + op.RequestType.Name,
+                            Description = op.RequestType.GetDescription(),
+                            PathVariables = restRoute.Variables.ToDictionary(v => v, v => data[v]),
+                            Data = data.Keys.Except(restRoute.Variables).Select(v => new PostmanData
+                            {
+                                Key = v,
+                                Value = data[v],
+                                Type = "text",
+                            }).ToArray(),
+                            DataMode = "params",
+                            Headers = headers,
+                            Version = 2,
+                            Time = DateTime.UtcNow.ToUnixTimeMs(),
+                        };
+                    }
+                }
             }
         }
     }
