@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ServiceStack.Text;
 
 namespace ServiceStack.Api.Postman
 {
@@ -10,6 +11,13 @@ namespace ServiceStack.Api.Postman
         public static string ReplaceVariables(this string route)
         {
             return route.Replace('{', ':').Replace("}", string.Empty);
+        }
+
+        public static string FormatLabel(this string template, Type requestType, string path)
+        {
+            return template.ToLower()
+                .Replace("{type}", requestType.Name)
+                .Replace("{route}", path);
         }
     }
 }

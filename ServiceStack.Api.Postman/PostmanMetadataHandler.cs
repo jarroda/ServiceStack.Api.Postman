@@ -52,13 +52,12 @@ namespace ServiceStack.Api.Postman
 
         protected virtual void ProcessOperations(Stream responseStream, IHttpRequest httpReq)
         {
-            var metadata = EndpointHost.Metadata;
-            var feature = EndpointHost.GetPlugin<PostmanFeature>();
+            var metadata = EndpointHost.Metadata;            
 
             var collectionId = Guid.NewGuid().ToString();
 
             var req = GetRequests(httpReq, metadata, collectionId, metadata.Operations);
-
+            
             var collection = new PostmanCollection
             {
                 Id = collectionId,
@@ -76,9 +75,11 @@ namespace ServiceStack.Api.Postman
 
         private IEnumerable<PostmanRequest> GetRequests(IHttpRequest request, ServiceMetadata metadata, string parentId, IEnumerable<Operation> operations)
         {
+            var feature = EndpointHost.GetPlugin<PostmanFeature>();
             var ret = new List<PostmanRequest>();
             // TODO: Support additional/custom headers
             var headers = "Accept: " + MimeTypes.Json;
+            var label = request.GetParam("label") ?? feature.DefaultLabel;
 
             foreach (var op in metadata.OperationsMap.Values.Where(o => metadata.IsVisible(request, o)))
             {
@@ -103,7 +104,7 @@ namespace ServiceStack.Api.Postman
                             Method = verb,
                             Url = request.GetApplicationUrl() + restRoute.Path.ReplaceVariables(),
                             // TODO: Support custom labels
-                            Name = verb + " " + op.RequestType.Name,
+                            Name = label.FormatLabel(op.RequestType, restRoute.Path),
                             Description = op.RequestType.GetDescription(),
                             PathVariables = restRoute.Variables.ToDictionary(v => v, v => data[v]),
                             Data = data.Keys.Except(restRoute.Variables).Select(v => new PostmanData

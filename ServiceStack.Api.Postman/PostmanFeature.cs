@@ -10,12 +10,19 @@ namespace ServiceStack.Api.Postman
 {
     public sealed class PostmanFeature : IPlugin
     {
+        public PostmanFeature()
+        {
+            DefaultLabel = "{type}";
+        }
+
         public void Register(IAppHost appHost)
         {
             appHost.CatchAllHandlers.Add(ProcessRequest);
         }
 
         public bool LocalOnly { get; set; }
+
+        public string DefaultLabel { get; set; }
 
         public IHttpHandler ProcessRequest(string httpMethod, string pathInfo, string filePath)
         {
