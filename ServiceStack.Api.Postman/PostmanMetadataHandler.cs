@@ -76,10 +76,11 @@ namespace ServiceStack.Api.Postman
         private IEnumerable<PostmanRequest> GetRequests(IHttpRequest request, ServiceMetadata metadata, string parentId, IEnumerable<Operation> operations)
         {
             var feature = EndpointHost.GetPlugin<PostmanFeature>();
-            var ret = new List<PostmanRequest>();
-            // TODO: Support additional/custom headers
-            var headers = "Accept: " + MimeTypes.Json;
+            var ret = new List<PostmanRequest>();            
             var label = request.GetParam("label") ?? feature.DefaultLabel;
+
+            var customHeaders = request.GetParam("headers");
+            var headers = customHeaders == null ? feature.DefaultHeaders : customHeaders.Split(',');
 
             foreach (var op in metadata.OperationsMap.Values.Where(o => metadata.IsVisible(request, o)))
             {
@@ -98,12 +99,11 @@ namespace ServiceStack.Api.Postman
                     foreach (var verb in routeVerbs)
                     {
                         yield return new PostmanRequest
-                        {
-                            CollectionId = parentId,
+                        {                            
                             Id = Guid.NewGuid().ToString(),
+                            Headers = string.Join("\n", headers),
                             Method = verb,
                             Url = request.GetApplicationUrl() + restRoute.Path.ReplaceVariables(),
-                            // TODO: Support custom labels
                             Name = label.FormatLabel(op.RequestType, restRoute.Path),
                             Description = op.RequestType.GetDescription(),
                             PathVariables = restRoute.Variables.ToDictionary(v => v, v => data[v]),
@@ -113,10 +113,10 @@ namespace ServiceStack.Api.Postman
                                 Value = data[v],
                                 Type = "text",
                             }).ToArray(),
-                            DataMode = "params",
-                            Headers = headers,
+                            DataMode = "params",                            
                             Version = 2,
                             Time = DateTime.UtcNow.ToUnixTimeMs(),
+                            CollectionId = parentId,
                         };
                     }
                 }

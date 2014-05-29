@@ -1,4 +1,5 @@
-﻿using ServiceStack.WebHost.Endpoints;
+﻿using ServiceStack.Common.Web;
+using ServiceStack.WebHost.Endpoints;
 using ServiceStack.WebHost.Endpoints.Support;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ namespace ServiceStack.Api.Postman
         public PostmanFeature()
         {
             DefaultLabel = "{type}";
+            DefaultHeaders = new[] { "Accept: " + MimeTypes.Json };
         }
 
         public void Register(IAppHost appHost)
@@ -23,6 +25,8 @@ namespace ServiceStack.Api.Postman
         public bool LocalOnly { get; set; }
 
         public string DefaultLabel { get; set; }
+
+        public string[] DefaultHeaders { get; set; }
 
         public IHttpHandler ProcessRequest(string httpMethod, string pathInfo, string filePath)
         {
