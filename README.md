@@ -1,4 +1,4 @@
-ServiceStack.Api.Postman
+ServiceStack.Api.Postman [![Build status](https://ci.appveyor.com/api/projects/status/bwmnwyilk3eupiwd)](https://ci.appveyor.com/project/jarroda/servicestack-api-postman)
 ========================
 [Postman](http://www.getpostman.com/) is a HTTP client designed to help test web services, and I have found it to be extremely helpful when developing REST based APIs.  One of its nicest features is the ability to save requests into '[collections](http://www.getpostman.com/docs/collections)', and the ability to import and export these collections for sharing with others.  I have written a simple ServiceStack plugin to enable the automatic generation of these collections.
 
