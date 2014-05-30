@@ -19,5 +19,12 @@ namespace ServiceStack.Api.Postman
                 .Replace("{type}", requestType.Name)
                 .Replace("{route}", path);
         }
+
+        public static U GetValueOrDefault<T, U>(this Dictionary<T, U> dictionary, T key)
+        {
+            U value = default(U);
+            dictionary.TryGetValue(key, out value);
+            return value;
+        }
     }
 }

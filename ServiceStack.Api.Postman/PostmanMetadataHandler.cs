@@ -88,11 +88,11 @@ namespace ServiceStack.Api.Postman
                 
                 var data = op.RequestType.GetSerializableFields().Select(f => f.Name)
                     .Concat(op.RequestType.GetSerializableProperties().Select(p => p.Name))
-                    .ToDictionary(f => f, f => exampleObject[f]);
+                    .ToDictionary(f => f, f => exampleObject.GetValueOrDefault(f));
 
                 foreach (var route in op.Routes)
                 {
-                    var routeVerbs = route.AllowsAllVerbs ? new[] { "POST" } :route.AllowedVerbs.Split(new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    var routeVerbs = route.AllowsAllVerbs ? new[] { "POST" } : route.AllowedVerbs.Split(new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
                     var restRoute = new RestRoute(route.RequestType, route.Path, route.AllowedVerbs);
 
@@ -106,7 +106,7 @@ namespace ServiceStack.Api.Postman
                             Url = request.GetApplicationUrl() + restRoute.Path.ReplaceVariables(),
                             Name = label.FormatLabel(op.RequestType, restRoute.Path),
                             Description = op.RequestType.GetDescription(),
-                            PathVariables = restRoute.Variables.ToDictionary(v => v, v => data[v]),
+                            PathVariables = restRoute.Variables.ToDictionary(v => v, v => data.GetValueOrDefault(v)),
                             Data = data.Keys.Except(restRoute.Variables).Select(v => new PostmanData
                             {
                                 Key = v,
