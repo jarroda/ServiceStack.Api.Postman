@@ -1,14 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.Http;
-using System.Web.Routing;
-using ServiceStack.ServiceHost;
-using ServiceStack.ServiceInterface;
-using ServiceStack.WebHost.Endpoints;
-using ServiceStack.OrmLite;
-using System.IO;
+﻿using ServiceStack.WebHost.Endpoints;
 using ServiceStack.Api.Postman;
 using ServiceStack.ServiceInterface.Cors;
 
@@ -24,8 +14,14 @@ namespace FluentMigrator.ServiceStack.TestV3
 
             public override void Configure(Funq.Container container)
             {
+                
                 Plugins.Add(new CorsFeature());
                 Plugins.Add(new PostmanFeature());
+
+                SetConfig(new EndpointHostConfig
+                {
+                    ServiceStackHandlerFactoryPath = "api"
+                });
             }
         }
 

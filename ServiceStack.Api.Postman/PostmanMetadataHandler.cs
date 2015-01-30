@@ -6,13 +6,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Web;
 using ServiceStack.Text;
 using ServiceStack.WebHost.Endpoints.Extensions;
 using ServiceStack.Common.Utils;
 using System.Net;
-using ServiceStack.Common.Web;
 using ServiceStack.ServiceClient.Web;
 
 namespace ServiceStack.Api.Postman
@@ -20,6 +18,8 @@ namespace ServiceStack.Api.Postman
     public class PostmanMetadataHandler : HttpHandlerBase, IServiceStackHttpHandler
     {
         public bool LocalOnly { get; set; }
+        private const string PostmanSubPath = "/postman";
+        private string _aspnetSubPath;
 
         public override void Execute(HttpContext context)
         {
@@ -27,6 +27,7 @@ namespace ServiceStack.Api.Postman
             {
                 context.Response.ContentType = "application/json";
 
+                _aspnetSubPath = CalculateAspnetSubRoute(context.Request);
                 ProcessOperations(context.Response.OutputStream, new HttpRequestWrapper(GetType().Name, context.Request));
             }
             else
@@ -34,6 +35,16 @@ namespace ServiceStack.Api.Postman
                 context.Response.StatusCode = (int)HttpStatusCode.NotFound;
                 context.Response.End();
             }
+        }
+
+        private string CalculateAspnetSubRoute(HttpRequest request)
+        {
+            string url = request.Url.ToString();
+            if (url.ToLowerInvariant().Contains(PostmanSubPath))
+            {
+                return url.Substring(0, url.LastIndexOf(PostmanSubPath, StringComparison.OrdinalIgnoreCase));
+            }
+            return url;
         }
 
         public void ProcessRequest(IHttpRequest httpReq, IHttpResponse httpRes, string operationName)
@@ -103,7 +114,7 @@ namespace ServiceStack.Api.Postman
                             Id = Guid.NewGuid().ToString(),
                             Headers = string.Join("\n", headers),
                             Method = verb,
-                            Url = request.GetApplicationUrl() + restRoute.Path.ReplaceVariables(),
+                            Url = CalculateAppUrl(request, _aspnetSubPath) + restRoute.Path.ReplaceVariables(),
                             Name = label.FormatLabel(op.RequestType, restRoute.Path),
                             Description = op.RequestType.GetDescription(),
                             PathVariables = restRoute.Variables.ToDictionary(v => v, v => data.GetValueOrDefault(v)),
@@ -121,6 +132,41 @@ namespace ServiceStack.Api.Postman
                     }
                 }
             }
+        }
+
+        private string CalculateAppUrl(IHttpRequest request, string aspnetSubPath)
+        {
+            string serviceStackUrl = request.GetApplicationUrl();
+            if (serviceStackUrl.Equals(aspnetSubPath))
+                return serviceStackUrl;
+            if (serviceStackUrl.StartsWith(aspnetSubPath))
+                return serviceStackUrl;
+
+            string newUrl;
+            if (TryBuildNewUrl(serviceStackUrl, aspnetSubPath, out newUrl))
+                return newUrl;
+
+            return serviceStackUrl;
+        }
+
+        private bool TryBuildNewUrl(string serviceStackUrl, string aspnetSubPath, out string newUrl)
+        {
+            newUrl = string.Empty;
+            if (!serviceStackUrl.Contains("/") || !aspnetSubPath.Contains("/"))
+                return false;
+            int lastSlash = serviceStackUrl.LastIndexOf("/", StringComparison.InvariantCultureIgnoreCase);
+            string urlStart = serviceStackUrl.Substring(0, lastSlash);
+            string urlEnd = serviceStackUrl.Substring(lastSlash);
+            if(!aspnetSubPath.StartsWith(urlStart, StringComparison.InvariantCultureIgnoreCase))
+                return false;
+
+            string urlMiddle = aspnetSubPath.Substring(urlStart.Length);
+            if (urlMiddle.EndsWith(urlEnd))
+            {
+                urlMiddle = urlMiddle.Substring(0, urlMiddle.Length - urlEnd.Length);
+            }
+            newUrl = urlStart + urlMiddle + urlEnd;
+            return true;
         }
     }
 }
