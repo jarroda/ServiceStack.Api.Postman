@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace ServiceStack.Api.Postman.Types
+﻿namespace ServiceStack.Api.Postman.Types
 {
     public class PostmanData
     {
