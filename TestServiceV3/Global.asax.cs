@@ -17,11 +17,6 @@ namespace FluentMigrator.ServiceStack.TestV3
                 
                 Plugins.Add(new CorsFeature());
                 Plugins.Add(new PostmanFeature());
-
-                SetConfig(new EndpointHostConfig
-                {
-                    ServiceStackHandlerFactoryPath = "api"
-                });
             }
         }
 
