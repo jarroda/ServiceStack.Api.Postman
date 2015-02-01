@@ -18,6 +18,10 @@ namespace ServiceStack.Api.Postman
     public class PostmanMetadataHandler : HttpHandlerBase, IServiceStackHttpHandler
     {
         public bool LocalOnly { get; set; }
+        public bool SupportWebApplication { get; set; }
+        public bool SupportFolders { get; set; }
+        public bool DoNotAllowFolderIfOnlyOneItem { get; set; }
+
         private const string PostmanSubPath = "/postman";
         private string _aspnetSubPath;
 
@@ -67,7 +71,10 @@ namespace ServiceStack.Api.Postman
 
             var collectionId = Guid.NewGuid().ToString();
 
-            var req = GetRequests(httpReq, metadata, collectionId, metadata.Operations);
+            var req =
+                GetRequests(httpReq, metadata, collectionId, metadata.Operations)
+                    .OrderBy(r => r.Folder)
+                    .ThenBy(r => r.Name);
             
             var collection = new PostmanCollection
             {
@@ -75,7 +82,15 @@ namespace ServiceStack.Api.Postman
                 Name = EndpointHost.Config.ServiceName,
                 Timestamp = DateTime.UtcNow.ToUnixTimeMs(),
                 Requests = req.ToArray(),
+                Order = new List<string>(),
+                Folders = new List<PostmanFolder>()
             };
+
+            AddToFolders(collection);
+            if (SupportFolders && DoNotAllowFolderIfOnlyOneItem)
+            {
+                MoveOneItemFoldersOneLevelUp(collection);
+            }
             
             using (var scope = JsConfig.BeginScope())
             {
@@ -84,10 +99,57 @@ namespace ServiceStack.Api.Postman
             }
         }
 
+        private void MoveOneItemFoldersOneLevelUp(PostmanCollection collection)
+        {
+            for (int folderIdx = collection.Folders.Count - 1; folderIdx >= 0; folderIdx--)
+                //Counting backwards to be able to remove folders
+            {
+                var folder = collection.Folders[folderIdx];
+                if (folder.Order.Count == 1)
+                {
+                    collection.Order.Add(folder.Order[0]);
+                    collection.Folders.RemoveAt(folderIdx);
+                }
+            }
+        }
+
+        private void AddToFolders(PostmanCollection collection)
+        {
+            if(!collection.Requests.Any())
+                return;
+
+            foreach (var request in collection.Requests)
+            {
+                if (!SupportFolders || string.IsNullOrEmpty(request.Folder))
+                {
+                    collection.Order.Add(request.Id);
+                }
+                else
+                {
+                    var folder = collection.Folders.FirstOrDefault(f => f.Name.Equals(request.Folder));
+                    if (folder == null)
+                    {
+                        folder = new PostmanFolder
+                        {
+                            CollectionId = collection.Id,
+                            CollectionName = collection.Name,
+                            Id = Guid.NewGuid().ToString(),
+                            Name = request.Folder,
+                            Order = new List<string> {request.Id}
+                        };
+                        collection.Folders.Add(folder);
+                    }
+                    else
+                    {
+                        folder.Order.Add(request.Id);
+                    }
+                }
+            }
+        }
+
         private IEnumerable<PostmanRequest> GetRequests(IHttpRequest request, ServiceMetadata metadata, string parentId, IEnumerable<Operation> operations)
         {
             var feature = EndpointHost.GetPlugin<PostmanFeature>();
-            var ret = new List<PostmanRequest>();            
             var label = request.GetParam("label") ?? feature.DefaultLabel;
 
             var customHeaders = request.GetParam("headers");
@@ -128,6 +190,7 @@ namespace ServiceStack.Api.Postman
                             Version = 2,
                             Time = DateTime.UtcNow.ToUnixTimeMs(),
                             CollectionId = parentId,
+                            Folder = restRoute.Path.GetFolderName()
                         };
                     }
                 }
@@ -137,6 +200,9 @@ namespace ServiceStack.Api.Postman
         private string CalculateAppUrl(IHttpRequest request, string aspnetSubPath)
         {
             string serviceStackUrl = request.GetApplicationUrl();
+            if (!SupportWebApplication)
+                return serviceStackUrl; //Like version 1.0.4
+
             if (serviceStackUrl.Equals(aspnetSubPath))
                 return serviceStackUrl;
             if (serviceStackUrl.StartsWith(aspnetSubPath))

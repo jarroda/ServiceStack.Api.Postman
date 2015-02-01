@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace ServiceStack.Api.Postman.Types
 {
@@ -31,5 +32,8 @@ namespace ServiceStack.Api.Postman.Types
         public Dictionary<string, string> PathVariables { get; set; }
 
         public string[] Responses { get; set; }
+
+        [IgnoreDataMember]
+        public string Folder { get; set; }
     }
 }
