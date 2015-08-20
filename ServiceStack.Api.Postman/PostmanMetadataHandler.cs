@@ -205,7 +205,7 @@ namespace ServiceStack.Api.Postman
 
             if (serviceStackUrl.Equals(aspnetSubPath))
                 return serviceStackUrl;
-            if (serviceStackUrl.StartsWith(aspnetSubPath))
+            if (aspnetSubPath != null && serviceStackUrl.StartsWith(aspnetSubPath))
                 return serviceStackUrl;
 
             string newUrl;
